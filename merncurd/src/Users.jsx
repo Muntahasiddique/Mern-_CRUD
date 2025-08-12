@@ -29,9 +29,7 @@ function Users() {
                   <td className="align-middle">{user.Email}</td>
                   <td className="align-middle">{user.Age}</td>
                   <td>
-                    <button className="btn btn-sm btn-outline-primary me-2">
-                      Edit
-                    </button>
+                       <Link to='/update' className="btn btn-primary" > Update User</Link>
                     <button className="btn btn-sm btn-outline-danger">
                       Delete
                     </button>

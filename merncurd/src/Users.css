@@ -1,0 +1,31 @@
+/* Users.module.css */
+.container {
+  display: flex;
+  height: 100vh;
+  background-color: #0d6efd; /* Bootstrap's primary color */
+  justify-content: center;
+  align-items: center;
+}
+
+.tableContainer {
+  display: flex;
+  height: 100vh;
+  background-color: #0d6efd;
+  justify-content: center;
+  align-items: center;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: #212529;
+  background-color: white;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 0.75rem;
+  vertical-align: top;
+  border-top: 1px solid #dee2e6;
+  text-align: inherit;
+}

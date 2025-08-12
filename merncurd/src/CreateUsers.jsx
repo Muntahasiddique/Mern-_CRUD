@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const CreateUser = () => {
+function CreateUser() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     age: ''
   });
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,12 +20,20 @@ const CreateUser = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-    // Reset form
-    setFormData({ name: '', email: '', age: '' });
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      await axios.post("http://localhost:3001/createUsers", formData);
+      navigate('/', { state: { success: 'User created successfully!' } });
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.error || 'Failed to create user. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -32,6 +45,8 @@ const CreateUser = () => {
             <p className='text-muted'>Please fill in the user details</p>
           </div>
           
+          {error && <div className="alert alert-danger">{error}</div>}
+
           <div className='mb-3'>
             <label htmlFor="name" className='form-label fw-semibold'>Full Name</label>
             <input 
@@ -80,14 +95,15 @@ const CreateUser = () => {
             <button 
               type='submit' 
               className='btn btn-primary py-2 fw-semibold rounded-3'
+              disabled={isSubmitting}
             >
-              Create User
+              {isSubmitting ? 'Creating...' : 'Create User'}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-};
+}
 
 export default CreateUser;

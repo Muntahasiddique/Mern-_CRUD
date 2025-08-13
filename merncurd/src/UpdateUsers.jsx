@@ -13,6 +13,7 @@ function UpdateUser() {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+const [profilePicturePreview, setProfilePicturePreview] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -31,7 +32,16 @@ function UpdateUser() {
     };
     fetchUser();
   }, [id]);
-
+const handleFileChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setProfilePicturePreview(URL.createObjectURL(file));
+    setFormData(prev => ({
+      ...prev,
+      profilePicture: file
+    }));
+  }
+};
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -40,105 +50,308 @@ function UpdateUser() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError(null);
+  setIsSubmitting(true);
 
-    try {
-      await axios.put(`http://localhost:3001/updateUser/${id}`, formData);
-      navigate('/', { state: { success: 'User updated successfully!' } });
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || 'Failed to update user. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+  try {
+    const formDataToSend = new FormData();
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('email', formData.email);
+    formDataToSend.append('age', formData.age);
+    if (formData.profilePicture) {
+      formDataToSend.append('profilePicture', formData.profilePicture);
     }
-  };
+
+    await axios.put(`http://localhost:3001/updateUser/${id}`, formDataToSend, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    navigate('/', { state: { success: 'User updated successfully!' } });
+  } catch (err) {
+    console.error(err);
+    setError(err.response?.data?.error || 'Failed to update user. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   if (isLoading) {
     return (
-      <div className="d-flex vh-100 bg-light justify-content-center align-items-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="min-vh-100 d-flex justify-content-center align-items-center" style={{
+        background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div className="text-center">
+          <div className="spinner-grow text-primary" style={{ width: '3rem', height: '3rem' }} role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <h5 className="mt-3 text-white">Loading Cosmic User Data...</h5>
         </div>
+        
+        {/* Aurora effect */}
+        <div className="position-absolute w-100 h-100" style={{
+          background: `
+            linear-gradient(45deg, 
+              rgba(94, 231, 223, 0.1) 0%, 
+              rgba(180, 144, 202, 0.1) 50%, 
+              rgba(203, 108, 230, 0.1) 100%)
+          `,
+          opacity: 0.7,
+          zIndex: 0,
+          animation: 'aurora 20s infinite alternate'
+        }}></div>
+        
+        <style>{`
+          @keyframes aurora {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(-5deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   return (
-    <div className='d-flex vh-100 bg-light justify-content-center align-items-center'>
-      <div className='w-md-50 w-100 bg-white rounded-4 shadow p-4 mx-3' style={{ maxWidth: '500px' }}>
-        <form onSubmit={handleSubmit}>
-          <div className='text-center mb-4'>
-            <h2 className='fw-bold text-primary'>Update User</h2>
-            <p className='text-muted'>Edit the user details</p>
-          </div>
-          
-          {error && <div className="alert alert-danger">{error}</div>}
+    <div className="min-vh-100 d-flex justify-content-center align-items-center" 
+         style={{
+           background: 'linear-gradient(135deg, #0f0c29, #302b63, #24243e)',
+           position: 'relative',
+           overflow: 'hidden'
+         }}>
+      
+      {/* Aurora background elements */}
+      <div className="position-absolute w-100 h-100" style={{
+        background: `
+          linear-gradient(45deg, 
+            rgba(94, 231, 223, 0.15) 0%, 
+            rgba(180, 144, 202, 0.15) 50%, 
+            rgba(203, 108, 230, 0.15) 100%)
+        `,
+        opacity: 0.7,
+        zIndex: 0,
+        animation: 'aurora 20s infinite alternate'
+      }}></div>
+      
+      {/* Floating particles */}
+      <div className="position-absolute w-100 h-100" style={{
+        backgroundImage: `
+          radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
+          radial-gradient(2px 2px at 80% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+          radial-gradient(2px 2px at 20% 90%, rgba(255,255,255,0.3) 0%, transparent 100%),
+          radial-gradient(2px 2px at 90% 20%, rgba(255,255,255,0.3) 0%, transparent 100%),
+          radial-gradient(2px 2px at 30% 95%, rgba(255,255,255,0.3) 0%, transparent 100%),
+          radial-gradient(2px 2px at 95% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
+          radial-gradient(2px 2px at 80% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
+          radial-gradient(2px 2px at 40% 40%, rgba(255,255,255,0.3) 0%, transparent 100%)
+        `,
+        backgroundSize: '100% 100%',
+        zIndex: 0,
+        animation: 'particles 30s linear infinite'
+      }}></div>
 
+      <div className="glass-card rounded-4 p-4 mx-3" style={{
+        width: '100%',
+        maxWidth: '500px',
+        backdropFilter: 'blur(16px)',
+        backgroundColor: 'rgba(30, 30, 80, 0.5)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+        zIndex: 1
+      }}>
+        <div className='text-center mb-4'>
           <div className='mb-3'>
-            <label htmlFor="name" className='form-label fw-semibold'>Full Name</label>
-            <input 
-              type="text" 
-              name="name"
-              id="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder='Enter full name' 
-              className='form-control py-2'
-              required
-            />
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="#b88cf2" viewBox="0 0 16 16">
+              <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+              <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+            </svg>
           </div>
-          
-          <div className='mb-3'>
-            <label htmlFor="email" className='form-label fw-semibold'>Email Address</label>
-            <input 
-              type="email" 
-              name="email"
-              id="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder='Enter email address' 
-              className='form-control py-2'
-              required
-            />
+          <h2 className='fw-bold text-white mb-2'>Update User</h2>
+          <p className='text-light'>Modify this cosmic traveler's details</p>
+        </div>
+        
+        {error && <div className="alert alert-neon mb-3" style={{
+          backgroundColor: 'rgba(255, 50, 100, 0.2)',
+          border: '1px solid rgba(255, 50, 100, 0.5)',
+          color: '#ffd6de'
+        }}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="me-2" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg>
+          {error}
+        </div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className='mb-4'>
+  <label htmlFor="profilePicture" className='form-label text-light fw-light'>PROFILE PICTURE</label>
+  <div className="d-flex align-items-center mb-3">
+    {profilePicturePreview || formData.profilePicture ? (
+      <img 
+        src={profilePicturePreview || `http://localhost:3001${formData.profilePicture}`} 
+        alt="Preview" 
+        style={{ 
+          width: '60px', 
+          height: '60px', 
+          borderRadius: '50%',
+          objectFit: 'cover',
+          marginRight: '15px'
+        }}
+      />
+    ) : (
+      <div style={{
+        width: '60px',
+        height: '60px',
+        borderRadius: '50%',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: '15px'
+      }}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+        </svg>
+      </div>
+    )}
+    <div className="flex-grow-1">
+      <input 
+        type="file" 
+        name="profilePicture"
+        id="profilePicture"
+        onChange={handleFileChange}
+        className='form-control bg-transparent text-light'
+        style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}
+        accept="image/*"
+      />
+    </div>
+  </div>
+</div>
+          <div className='mb-4'>
+            <label htmlFor="name" className='form-label text-light fw-light'>FULL NAME</label>
+            <div className="input-group">
+              <span className="input-group-text bg-transparent border-end-0 text-light">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                </svg>
+              </span>
+              <input 
+                type="text" 
+                name="name"
+                id="name"
+                value={formData.name}
+                onChange={handleChange}
+                className='form-control bg-transparent text-light border-start-0'
+                style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}
+                placeholder='Enter full name'
+                required
+              />
+            </div>
           </div>
           
           <div className='mb-4'>
-            <label htmlFor="age" className='form-label fw-semibold'>Age</label>
-            <input 
-              type="number" 
-              name="age"
-              id="age"
-              value={formData.age}
-              onChange={handleChange}
-              placeholder='Enter age' 
-              className='form-control py-2'
-              min="1"
-              max="120"
-              required
-            />
+            <label htmlFor="email" className='form-label text-light fw-light'>EMAIL ADDRESS</label>
+            <div className="input-group">
+              <span className="input-group-text bg-transparent border-end-0 text-light">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm3.436-.586L16 11.801V4.697l-5.803 3.546Z"/>
+                </svg>
+              </span>
+              <input 
+                type="email" 
+                name="email"
+                id="email"
+                value={formData.email}
+                onChange={handleChange}
+                className='form-control bg-transparent text-light border-start-0'
+                style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}
+                placeholder='Enter email address'
+                required
+              />
+            </div>
           </div>
           
-          <div className='d-grid gap-2'>
+          <div className='mb-4'>
+            <label htmlFor="age" className='form-label text-light fw-light'>AGE</label>
+            <div className="input-group">
+              <span className="input-group-text bg-transparent border-end-0 text-light">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8 1a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM3 5a5 5 0 1 1 5.5 4.975V12h2a.5.5 0 0 1 0 1h-2v2a.5.5 0 0 1-1 0v-2h-2a.5.5 0 0 1 0-1h2V9.975A5 5 0 0 1 3 5z"/>
+                </svg>
+              </span>
+              <input 
+                type="number" 
+                name="age"
+                id="age"
+                value={formData.age}
+                onChange={handleChange}
+                className='form-control bg-transparent text-light border-start-0'
+                style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}
+                placeholder='Enter age'
+                min="1"
+                max="120"
+                required
+              />
+            </div>
+          </div>
+          
+          <div className='d-grid gap-3 mt-4'>
             <button 
               type='submit' 
-              className='btn btn-primary py-2 fw-semibold rounded-3'
+              className='btn btn-neon-purple rounded-pill py-2 fw-bold'
               disabled={isSubmitting}
+              style={{
+                background: 'linear-gradient(45deg, #b88cf2, #8e6ff2)',
+                border: 'none',
+                boxShadow: '0 0 15px rgba(184, 140, 242, 0.5)'
+              }}
             >
-              {isSubmitting ? 'Updating...' : 'Update User'}
+              {isSubmitting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  UPDATING USER...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="me-2" viewBox="0 0 16 16">
+                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                  </svg>
+                  UPDATE USER
+                </>
+              )}
             </button>
+            
             <button
               type='button'
-              className='btn btn-outline-secondary py-2 rounded-3'
+              className='btn btn-glass rounded-pill py-2'
               onClick={() => navigate('/')}
+              style={{
+                backdropFilter: 'blur(10px)',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}
             >
-              Cancel
+              CANCEL
             </button>
           </div>
         </form>
       </div>
+
+      <style>{`
+        @keyframes particles {
+          from { background-position: 0 0 }
+          to { background-position: 1000px 1000px }
+        }
+        
+        .btn-neon-purple:hover {
+          box-shadow: 0 0 20px rgba(184, 140, 242, 0.8) !important;
+          transform: translateY(-1px);
+        }
+      `}</style>
     </div>
   );
 }

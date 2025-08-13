@@ -1,21 +1,46 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 const UserModel = require('./models/Users');
+// Configure storage for uploaded files
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/images');
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + "_" + Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+// Colorful startup message
+console.log('\x1b[36m%s\x1b[0m', '🚀 Starting server...');
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public')); // Serve static files from public folder
 
-// Database connection
-mongoose.connect("mongodb+srv://muntahamirza890:dbMuntahaPass@mydb.bcxy0.mongodb.net/crudmern", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log("MongoDB connected successfully"))
-.catch(err => console.error("MongoDB connection error:", err));
+// Modern MongoDB connection (without deprecated options)
+mongoose.connect("mongodb+srv://muntahamirza890:dbMuntahaPass@mydb.bcxy0.mongodb.net/crudmern")
+  .then(() => console.log('\x1b[32m%s\x1b[0m', '🍃 MongoDB connected successfully'))
+  .catch(err => console.error('\x1b[31m%s\x1b[0m', '❌ MongoDB connection error:', err));
+
+// Colorful route logging middleware
+app.use((req, res, next) => {
+  const methodColors = {
+    GET: '\x1b[32m',    // Green
+    POST: '\x1b[34m',   // Blue
+    PUT: '\x1b[33m',    // Yellow
+    DELETE: '\x1b[31m'  // Red
+  };
+  console.log(`${methodColors[req.method] || '\x1b[37m'}${req.method}\x1b[0m ${req.path}`);
+  next();
+});
 
 // Routes
 app.get('/', (req, res) => {
@@ -24,58 +49,66 @@ app.get('/', (req, res) => {
     .catch(err => res.status(500).json({ error: err.message }));
 });
 
-app.post("/createUsers", async (req, res) => {
-  try {
-    const user = await UserModel.create(req.body);
-    res.status(201).json(user);
-  } catch (err) {
-    console.error("Error creating user:", err);
-    res.status(500).json({ error: "Failed to create user" });
-  }
-});
-// Get single user
 app.get('/getUser/:id', async (req, res) => {
   try {
     const user = await UserModel.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Update user
-app.put('/updateUser/:id', async (req, res) => {
+// Update your routes to handle file uploads
+app.post("/createUsers", upload.single('profilePicture'), async (req, res) => {
   try {
+    const userData = {
+      ...req.body,
+      profilePicture: req.file ? `/images/${req.file.filename}` : null
+    };
+    const user = await UserModel.create(userData);
+    res.status(201).json(user);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create user" });
+  }
+});
+
+app.put('/updateUser/:id', upload.single('profilePicture'), async (req, res) => {
+  try {
+    const updateData = {
+      ...req.body,
+    };
+    
+    if (req.file) {
+      updateData.profilePicture = `/images/${req.file.filename}`;
+    }
+
     const user = await UserModel.findByIdAndUpdate(
       req.params.id, 
-      req.body, 
+      updateData, 
       { new: true }
     );
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    
+    if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-// Delete user
+
 app.delete('/deleteUser/:id', async (req, res) => {
   try {
     const user = await UserModel.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({ message: 'User deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-// Server
+
+
+
 const PORT = 3001;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log('\x1b[35m%s\x1b[0m', `🌐 Server running on port ${PORT}`);
 });

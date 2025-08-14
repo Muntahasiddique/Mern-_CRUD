@@ -4,6 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const UserModel = require('./models/Users');
+
 // Configure storage for uploaded files
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -15,6 +16,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+
 // Colorful startup message
 console.log('\x1b[36m%s\x1b[0m', '🚀 Starting server...');
 
@@ -23,9 +25,9 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Serve static files from public folder
+app.use(express.static('public'));
 
-// Modern MongoDB connection (without deprecated options)
+// MongoDB connection
 mongoose.connect("mongodb+srv://muntahamirza890:dbMuntahaPass@mydb.bcxy0.mongodb.net/crudmern")
   .then(() => console.log('\x1b[32m%s\x1b[0m', '🍃 MongoDB connected successfully'))
   .catch(err => console.error('\x1b[31m%s\x1b[0m', '❌ MongoDB connection error:', err));
@@ -42,11 +44,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
-app.get('/', (req, res) => {
-  UserModel.find({})
-    .then(users => res.json(users))
-    .catch(err => res.status(500).json({ error: err.message }));
+// Enhanced routes with filtering
+app.get('/', async (req, res) => {
+  try {
+    const { name, email, age, sort, order = 'asc' } = req.query;
+    const filter = {};
+    
+    if (name) filter.name = { $regex: name, $options: 'i' };
+    if (email) filter.email = { $regex: email, $options: 'i' };
+    if (age) filter.age = age;
+
+    const sortOptions = {};
+    if (sort) sortOptions[sort] = order === 'asc' ? 1 : -1;
+
+    const users = await UserModel.find(filter).sort(sortOptions);
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/getUser/:id', async (req, res) => {
@@ -59,7 +74,6 @@ app.get('/getUser/:id', async (req, res) => {
   }
 });
 
-// Update your routes to handle file uploads
 app.post("/createUsers", upload.single('profilePicture'), async (req, res) => {
   try {
     const userData = {
@@ -75,9 +89,7 @@ app.post("/createUsers", upload.single('profilePicture'), async (req, res) => {
 
 app.put('/updateUser/:id', upload.single('profilePicture'), async (req, res) => {
   try {
-    const updateData = {
-      ...req.body,
-    };
+    const updateData = { ...req.body };
     
     if (req.file) {
       updateData.profilePicture = `/images/${req.file.filename}`;
@@ -105,8 +117,6 @@ app.delete('/deleteUser/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-
 
 const PORT = 3001;
 app.listen(PORT, () => {

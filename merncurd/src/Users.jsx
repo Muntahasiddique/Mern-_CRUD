@@ -7,7 +7,15 @@ function Users({ darkMode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [filters, setFilters] = useState({
+    name: '',
+    email: '',
+    age: '',
+    sort: 'name',
+    order: 'asc'
+  });
 
+  // Network status detection
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -21,9 +29,10 @@ function Users({ darkMode }) {
     };
   }, []);
 
+  // Fetch users with filters
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [filters]);
 
   const fetchUsers = async () => {
     if (!isOnline) {
@@ -33,13 +42,34 @@ function Users({ darkMode }) {
     }
 
     try {
-      const response = await axios.get('http://localhost:3001');
+      const params = new URLSearchParams();
+      if (filters.name) params.append('name', filters.name);
+      if (filters.email) params.append('email', filters.email);
+      if (filters.age) params.append('age', filters.age);
+      if (filters.sort) params.append('sort', filters.sort);
+      if (filters.order) params.append('order', filters.order);
+
+      const response = await axios.get(`http://localhost:3001?${params.toString()}`);
       setUsers(response.data);
+      setError(null);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSortChange = (field) => {
+    setFilters(prev => ({
+      ...prev,
+      sort: field,
+      order: prev.sort === field ? (prev.order === 'asc' ? 'desc' : 'asc') : 'asc'
+    }));
   };
 
   const handleDelete = async (id) => {
@@ -60,6 +90,15 @@ function Users({ darkMode }) {
     }
   };
 
+  const SortIndicator = ({ field }) => {
+    if (filters.sort !== field) return null;
+    return (
+      <span className="ms-1">
+        {filters.order === 'asc' ? '↑' : '↓'}
+      </span>
+    );
+  };
+
   if (loading) return (
     <div className="min-vh-100 d-flex justify-content-center align-items-center">
       <div className="text-center">
@@ -69,7 +108,7 @@ function Users({ darkMode }) {
           <span className="visually-hidden">Loading...</span>
         </div>
         <h5 className="mt-3">
-          {isOnline ? "INITIALIZING USER DATABASE..." : "OFFLINE - CONNECTION LOST"}
+          {isOnline ? "LOADING USER DATA..." : "OFFLINE - CONNECTION LOST"}
         </h5>
       </div>
     </div>
@@ -82,9 +121,9 @@ function Users({ darkMode }) {
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="me-2" viewBox="0 0 16 16">
             <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
           </svg>
-          {isOnline ? "DATABASE CONNECTION ERROR" : "OFFLINE MODE"}
+          {isOnline ? "DATABASE ERROR" : "OFFLINE MODE"}
         </h4>
-        <p className="mb-4">{isOnline ? `ERROR CODE: ${error}` : "You are currently offline. Some features may not work."}</p>
+        <p className="mb-4">{isOnline ? `ERROR: ${error}` : "You are currently offline. Some features may not work."}</p>
         {isOnline && (
           <button className="btn btn-cyberpunk" onClick={fetchUsers}>
             RETRY CONNECTION
@@ -115,6 +154,56 @@ function Users({ darkMode }) {
             </div>
           </div>
           
+          {/* Filter Controls */}
+          <div className="cyber-filter-bar p-3">
+            <div className="row g-2">
+              <div className="col-md-3">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Filter by name"
+                  className="form-control cyber-input"
+                  value={filters.name}
+                  onChange={handleFilterChange}
+                />
+              </div>
+              <div className="col-md-3">
+                <input
+                  type="text"
+                  name="email"
+                  placeholder="Filter by email"
+                  className="form-control cyber-input"
+                  value={filters.email}
+                  onChange={handleFilterChange}
+                />
+              </div>
+              <div className="col-md-2">
+                <input
+                  type="number"
+                  name="age"
+                  placeholder="Filter by age"
+                  className="form-control cyber-input"
+                  value={filters.age}
+                  onChange={handleFilterChange}
+                />
+              </div>
+              <div className="col-md-2">
+                <button 
+                  className="btn btn-cyberpunk-alt w-100"
+                  onClick={() => setFilters({
+                    name: '',
+                    email: '',
+                    age: '',
+                    sort: 'name',
+                    order: 'asc'
+                  })}
+                >
+                  RESET FILTERS
+                </button>
+              </div>
+            </div>
+          </div>
+          
           <div className="cyber-card-body p-0">
             {users.length === 0 ? (
               <div className="text-center py-5">
@@ -122,13 +211,13 @@ function Users({ darkMode }) {
                   <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
                 </svg>
                 <h4 className="mt-3">
-                  {isOnline ? "DATABASE EMPTY" : "OFFLINE - DATA MAY BE OUTDATED"}
+                  {isOnline ? "NO USERS FOUND" : "OFFLINE - DATA MAY BE OUTDATED"}
                 </h4>
                 <p className="mb-4">
-                  {isOnline ? "No user records found in the system" : "Connect to the internet to sync latest data"}
+                  {isOnline ? "No users match your filters" : "Connect to the internet to sync latest data"}
                 </p>
                 <Link to='/create' className="btn btn-cyberpunk px-4">
-                  INITIALIZE USER
+                  CREATE FIRST USER
                 </Link>
               </div>
             ) : (
@@ -136,9 +225,24 @@ function Users({ darkMode }) {
                 <table className="table table-hover align-middle mb-0">
                   <thead>
                     <tr>
-                      <th className="ps-4">NAME</th>
-                      <th>EMAIL</th>
-                      <th>AGE</th>
+                      <th 
+                        className="ps-4 clickable" 
+                        onClick={() => handleSortChange('name')}
+                      >
+                        NAME <SortIndicator field="name" />
+                      </th>
+                      <th 
+                        className="clickable"
+                        onClick={() => handleSortChange('email')}
+                      >
+                        EMAIL <SortIndicator field="email" />
+                      </th>
+                      <th 
+                        className="clickable"
+                        onClick={() => handleSortChange('age')}
+                      >
+                        AGE <SortIndicator field="age" />
+                      </th>
                       <th className="text-end pe-4">ACTIONS</th>
                     </tr>
                   </thead>
@@ -204,7 +308,9 @@ function Users({ darkMode }) {
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="me-1" viewBox="0 0 16 16">
                 <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
               </svg>
-              SYSTEM STATUS: <span>{isOnline ? "ONLINE" : "OFFLINE"}</span> | 
+              SYSTEM STATUS: <span className={isOnline ? "text-success" : "text-danger"}>
+                {isOnline ? "ONLINE" : "OFFLINE"}
+              </span> | 
               TOTAL USERS: <span>{users.length}</span>
             </small>
           </div>
